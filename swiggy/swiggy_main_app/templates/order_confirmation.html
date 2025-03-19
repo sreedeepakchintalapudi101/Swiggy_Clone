@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="text-center">🎉 Order Confirmed! 🎉</h2>
+    <p class="text-center">Thank you for your order, <strong>{{ order.user.username }}</strong>!</p>
+
+    <h4>Order Details:</h4>
+    <p><strong>Order ID:</strong> {{ order.id }}</p>
+    <p><strong>Delivery Address:</strong> {{ order.customer_name }}, {{ order.street_address }}, {{ order.city }}, {{ order.pincode }}</p>
+    <p><strong>Total Price:</strong> ₹{{ order.total_price }}</p>
+
+    <h4>Items:</h4>
+    <ul>
+        {% for item in order.order_items.all %}
+            <li>{{ item.menu_item.name }} (x{{ item.quantity }}) - ₹{{ item.menu_item.price|floatformat:2 }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'home' %}" class="btn btn-primary">Back to Home</a>
+</div>
+
+</body>
+</html>

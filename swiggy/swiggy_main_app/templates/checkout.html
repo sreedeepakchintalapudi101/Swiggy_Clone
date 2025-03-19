@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Swiggy Clone</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        body { background-color: #f8f9fa; font-family: Arial, sans-serif; }
+        .navbar { background-color: #ff6f00; }
+        .navbar-brand { color: white; font-size: 24px; font-weight: bold; }
+        .container { max-width: 600px; margin-top: 50px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        .payment-option, .address-card { padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); cursor: pointer; border: 2px solid transparent; transition: 0.3s; }
+        .payment-option:hover, .payment-option.selected, .address-card:hover, .address-card.selected { background-color: #ff6f00; color: white; border-color: #ff6f00; }
+        #add-address-form { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Swiggy</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h3 class="text-center mb-4">Checkout</h3>
+        
+        <h4>Select a Payment Method</h4>
+        <div class="row">
+            <div class="col-12 mb-2"><div class="payment-option" onclick="selectPayment('upi', this)">💳 UPI</div></div>
+            <div class="col-12 mb-2"><div class="payment-option" onclick="selectPayment('credit_card', this)">💳 Credit Card</div></div>
+            <div class="col-12 mb-2"><div class="payment-option" onclick="selectPayment('debit_card', this)">💳 Debit Card</div></div>
+            <div class="col-12 mb-2"><div class="payment-option" onclick="selectPayment('net_banking', this)">🏦 Net Banking</div></div>
+            <div class="col-12 mb-2"><div class="payment-option" onclick="selectPayment('wallets', this)">💰 Digital Wallets</div></div>
+            <div class="col-12"><div class="payment-option" onclick="selectPayment('cod', this)">💵 Cash on Delivery</div></div>
+        </div>
+
+        <h4 class="mt-4">Select Delivery Address</h4>
+        {% if saved_addresses %}
+            <div class="row">
+                {% for address in saved_addresses %}
+                    <div class="col-12 mb-2">
+                        <div class="address-card {% if forloop.first %}selected{% endif %}" onclick="selectAddress({{ address.id }})">
+                            <p><strong>{{ address.full_name }}</strong><br>{{ address.street_address }}, {{ address.city }}, {{ address.state }} - {{ address.postal_code }}<br>📞 {{ address.phone_number }}</p>
+                            <input type="radio" name="selected_address" value="{{ address.id }}" {% if forloop.first %}checked{% endif %} hidden>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted text-center">No saved addresses found.</p>
+        {% endif %}
+
+        <div class="text-center mt-3">
+            <button class="btn btn-success" onclick="toggleAddressForm()"><i class="fas fa-plus"></i> Add New Address</button>
+        </div>
+
+        <div id="add-address-form" class="mt-4">
+            <h4 class="text-center">Add New Address</h4>
+            <form method="POST" action="{% url 'checkout' %}">
+                {% csrf_token %}
+                <input type="text" name="full_name" class="form-control mb-2" placeholder="Full Name" required>
+                <input type="text" name="phone_number" class="form-control mb-2" placeholder="Phone Number" required>
+                <input type="text" name="street_address" class="form-control mb-2" placeholder="Street Address" required>
+                <input type="text" name="city" class="form-control mb-2" placeholder="City" required>
+                <input type="text" name="state" class="form-control mb-2" placeholder="State" required>
+                <input type="text" name="postal_code" class="form-control mb-2" placeholder="Postal Code" required>
+                <button type="submit" class="btn btn-primary w-100">Save Address</button>
+            </form>
+        </div>
+
+        <form method="POST" action="{% url 'checkout' %}" onsubmit="return validateSelection()">
+            {% csrf_token %}
+            <input type="hidden" name="selected_address" id="selected_address_id" value="{% if saved_addresses %}{{ saved_addresses.0.id }}{% endif %}">
+            <input type="hidden" name="payment_method" id="paymentMethod">
+            <button type="submit" class="btn btn-warning w-100 mt-4" id="proceedBtn" disabled>Place Order</button>
+        </form>
+    </div>
+
+    <script>
+        function selectPayment(method, element) {
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('paymentMethod').value = method;
+            document.getElementById('proceedBtn').disabled = false;
+        }
+
+        function selectAddress(addressId) {
+            document.querySelectorAll('.address-card').forEach(card => card.classList.remove('selected'));
+            document.querySelector(`[onclick="selectAddress(${addressId})"]`).classList.add('selected');
+            document.getElementById("selected_address_id").value = addressId;
+        }
+
+        function toggleAddressForm() {
+            let form = document.getElementById("add-address-form");
+            form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+        }
+
+        function validateSelection() {
+            if (!document.getElementById("selected_address_id").value) {
+                alert("Please select a delivery address before placing the order.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
